@@ -1,0 +1,2 @@
+# gounter
+Go counter.
