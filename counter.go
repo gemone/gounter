@@ -17,7 +17,7 @@ import (
 //
 // Copying is prohibited. Please acquire new object.
 type Counter struct {
-	noCopy
+	noCopy noCopy
 
 	bits uint64
 }
