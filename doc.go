@@ -1,0 +1,3 @@
+// doc
+//
+package gounter
