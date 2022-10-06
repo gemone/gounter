@@ -1,6 +1,7 @@
 package gounter
 
 import (
+	"math"
 	"math/rand"
 	"sync/atomic"
 	"testing"
@@ -147,14 +148,20 @@ func testCounterDecZero(t *testing.T) {
 	c := AcquireCounter()
 	defer ReleaseCounter(c)
 
+	var num int64
+
 	for i := 0; i < 100; i++ {
 		go func() {
-			c.Sub(rand.Float64())
+			// Rounding
+			sub := math.Round(rand.Float64())
+			c.Sub(sub)
+			atomic.AddInt64(&num, int64(sub)*-1)
 			ch <- struct{}{}
 		}()
 
 		go func() {
 			c.Dec()
+			atomic.AddInt64(&num, -1)
 			ch <- struct{}{}
 		}()
 	}
@@ -167,7 +174,15 @@ func testCounterDecZero(t *testing.T) {
 		}
 	}
 
+	bits := atomic.LoadUint64(&c.bits)
+
+	n := math.Float64frombits(bits)
+
+	if int64(n) != num {
+		t.Fatalf("dec error: num should %d, buf %0f", num, n)
+	}
+
 	if c.Get() != 0 {
-		t.Fatalf("inc error: should 0, but %f", c.Get())
+		t.Fatalf("dec error: should 0, but %f", c.Get())
 	}
 }
