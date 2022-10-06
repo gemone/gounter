@@ -8,7 +8,6 @@ import (
 
 // Counter supports increasing and decreasing counter internal value.
 // Only responsible for counting, without any additional content.
-// Implementation reference sync.WaitGroup .
 //
 // Decrement to a negative number is allowed,
 // but once it is less than 0, `Get()` will get 0.
@@ -22,27 +21,31 @@ type Counter struct {
 	bits uint64
 }
 
-// counterPool is a pool for counter
+// counterPool is a pool for counter.
 var counterPool = &sync.Pool{
 	New: func() any {
 		return &Counter{}
 	},
 }
 
-// AcquireCounter return a
+// AcquireCounter return a Counter Poionter.
 func AcquireCounter() *Counter {
 	return counterPool.New().(*Counter)
 }
 
+// ReleaseCounter releases a Counter Poionter.
 func ReleaseCounter(c *Counter) {
 	c.reset()
 	counterPool.Put(c)
 }
 
+// reset Counter to release.
 func (c *Counter) reset() {
 	atomic.StoreUint64(&c.bits, 0)
 }
 
+// Get returns a number.
+// When the counter value is negative, it returns 0.
 func (c *Counter) Get() float64 {
 	bits := atomic.LoadUint64(&c.bits)
 	val := math.Float64frombits(bits)
@@ -53,14 +56,18 @@ func (c *Counter) Get() float64 {
 	return val
 }
 
+// Inc increases the counter by 1.
 func (c *Counter) Inc() {
 	c.Add(1)
 }
 
+// Dec decreases the counter by 1.
 func (c *Counter) Dec() {
 	c.Add(-1)
 }
 
+// Add increases the counter number.
+// Decreasing use negative number.
 func (c *Counter) Add(delta float64) {
 	for {
 		oldBits := atomic.LoadUint64(&c.bits)
@@ -72,10 +79,13 @@ func (c *Counter) Add(delta float64) {
 	}
 }
 
+// Sub decreases the counter number.
 func (c *Counter) Sub(delta float64) {
 	c.Add(delta * -1)
 }
 
+// CopyTo copies a Counter to other Counter.
+// If same Counter, do not change everything.
 func (c *Counter) CopyTo(dst *Counter) {
 	// fix c to c can not return
 	if c == dst {
