@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "main"
+      - "develop"
+
+jobs:
+  build:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
+        version: ['1.18', '1.19']
+
+    steps:
+    - name: Set up Go ${{ matrix.version }}
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.version }}
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Download dependencies
+      run: |
+        go mod download
+
+    - name: Test
+      run: go test -cover ./... -v
+
