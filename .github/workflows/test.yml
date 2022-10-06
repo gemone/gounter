@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "main"
+      - "develop"
+
+env:
+  GOVERSION: 1.18
+
+jobs:
+  build:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
+
+    steps:
+    - name: Set up Go ${{ env.GOVERSION }}
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ env.GOVERSION }}
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Download dependencies
+      run: |
+        go mod download
+
+    - name: Test
+      run: go test -cover ./... -v
+
