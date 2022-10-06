@@ -47,11 +47,18 @@ func (c *Counter) reset() {
 // Get returns a number.
 // When the counter value is negative, it returns 0.
 func (c *Counter) Get() float64 {
-	bits := atomic.LoadUint64(&c.bits)
-	val := math.Float64frombits(bits)
+	val := c.Real()
 	if val < 0 {
 		return 0
 	}
+
+	return val
+}
+
+// Real returns a number in counter.
+func (c *Counter) Real() float64 {
+	bits := atomic.LoadUint64(&c.bits)
+	val := math.Float64frombits(bits)
 
 	return val
 }
@@ -84,20 +91,34 @@ func (c *Counter) Sub(delta float64) {
 	c.Add(delta * -1)
 }
 
+// Label returns a number for CounterType
+func (c *Counter) Label() CounterType {
+	return CounterNormal
+}
+
+// Reset resets this Counter.
+func (c *Counter) Reset() {
+	c.reset()
+}
+
 // CopyTo copies a Counter to other Counter.
 // If same Counter, do not change everything.
-func (c *Counter) CopyTo(dst *Counter) {
+func (c *Counter) CopyTo(dst *Counter) (ok bool) {
 	// fix c to c can not return
 	if c == dst {
 		return
 	}
 
+	// some error ?
+	if c.Label() != dst.Label() {
+		return
+	}
+
 	for {
 		oldVal1 := atomic.LoadUint64(&dst.bits)
-
 		val1 := atomic.LoadUint64(&c.bits)
-
 		if atomic.CompareAndSwapUint64(&dst.bits, oldVal1, val1) {
+			ok = true
 			return
 		}
 	}

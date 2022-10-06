@@ -179,7 +179,11 @@ func testCounterDecZero(t *testing.T) {
 	n := math.Float64frombits(bits)
 
 	if int64(n) != num {
-		t.Fatalf("dec error: num should %d, buf %0f", num, n)
+		t.Fatalf("dec error: num should %d, but %0f", num, n)
+	}
+
+	if int64(c.Real()) != num {
+		t.Fatalf("dec error: num should %d, but %0f", num, c.Real())
 	}
 
 	if c.Get() != 0 {
