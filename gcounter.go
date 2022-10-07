@@ -42,5 +42,6 @@ type GounterWithLable interface {
 	Inc(string) Gounter
 	Dec(string) Gounter
 
-	CopyTo() bool
+	// Based on the map feature,
+	// replication should not be accepted. (CopyTo)
 }
