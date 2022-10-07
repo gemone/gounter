@@ -30,6 +30,7 @@ func TestCounterCopyTo(t *testing.T) {
 	testGo(t, testCopyTo, 10000)
 }
 
+// race fail
 func TestCounterChange(t *testing.T) {
 	t.Parallel()
 
@@ -169,7 +170,8 @@ func testCounterDecZero(t *testing.T) {
 	for i := 0; i < 200; i++ {
 		select {
 		case <-ch:
-		case <-time.After(time.Second):
+		case <-time.After(time.Second * 10):
+			// test -race
 			t.Fatal("timeout")
 		}
 	}
