@@ -1,9 +1,15 @@
 package gounter
 
 import (
+	"errors"
 	"math"
 	"sync"
 	"sync/atomic"
+)
+
+var (
+	ErrSameCounter    = errors.New("can not copy same counter")
+	ErrDifferentLabel = errors.New("can not copy different label counter")
 )
 
 // Counter supports increasing and decreasing counter internal value.
@@ -64,34 +70,39 @@ func (c *Counter) Real() float64 {
 }
 
 // Inc increases the counter by 1.
-func (c *Counter) Inc() {
-	c.Add(1)
+// Counter always returns true.
+func (c *Counter) Inc() bool {
+	return c.Add(1)
 }
 
 // Dec decreases the counter by 1.
-func (c *Counter) Dec() {
-	c.Add(-1)
+// Counter always returns true.
+func (c *Counter) Dec() bool {
+	return c.Add(-1)
 }
 
 // Add increases the counter number.
 // Decreasing use negative number.
-func (c *Counter) Add(delta float64) {
+// Counter always returns true.
+func (c *Counter) Add(delta float64) bool {
 	for {
 		oldBits := atomic.LoadUint64(&c.bits)
 		newVal := math.Float64frombits(oldBits) + delta
 		newBits := math.Float64bits(newVal)
 		if atomic.CompareAndSwapUint64(&c.bits, oldBits, newBits) {
-			return
+			return true
 		}
 	}
 }
 
 // Sub decreases the counter number.
-func (c *Counter) Sub(delta float64) {
-	c.Add(delta * -1)
+// Counter always returns true.
+func (c *Counter) Sub(delta float64) bool {
+	return c.Add(delta * -1)
 }
 
 // Label returns a number for CounterType
+// Counter always returns CounterNormal
 func (c *Counter) Label() CounterType {
 	return CounterNormal
 }
@@ -103,14 +114,16 @@ func (c *Counter) Reset() {
 
 // CopyTo copies a Counter to other Counter.
 // If same Counter, do not change everything.
-func (c *Counter) CopyTo(dst *Counter) (ok bool) {
+func (c *Counter) CopyTo(dst *Counter) (ok bool, err error) {
 	// fix c to c can not return
 	if c == dst {
+		err = ErrSameCounter
 		return
 	}
 
 	// some error ?
 	if c.Label() != dst.Label() {
+		err = ErrDifferentLabel
 		return
 	}
 

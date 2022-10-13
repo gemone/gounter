@@ -70,12 +70,30 @@ func testCopyTo(t *testing.T) {
 		atomic.AddUint64(&c1.bits, v1Change)
 
 		// c1 to c1
-		c1.CopyTo(c1)
+		ok, err := c1.CopyTo(c1)
+		if ok {
+			t.Fatal("same counter should err, but not!")
+		}
+		if err != ErrSameCounter {
+			t.Fatalf("same counter should err, but %s", err.Error())
+		}
 		// c2 to c2
-		c2.CopyTo(c2)
+		ok, err = c2.CopyTo(c2)
+		if ok {
+			t.Fatal("same counter should err, but not!")
+		}
+		if err != ErrSameCounter {
+			t.Fatalf("same counter should err, but %s", err.Error())
+		}
 
 		// copyto
-		c1.CopyTo(c2)
+		ok, err = c1.CopyTo(c2)
+		if !ok {
+			t.Fatal("counter should be copied, but not")
+		}
+		if err != nil {
+			t.Fatalf("counter should be copied, but err: %s", err.Error())
+		}
 
 		if c2.bits != v1Change {
 			t.Fatalf("copy error: val=%d", c2.bits)
@@ -95,6 +113,7 @@ func testCounterInc(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		go func() {
 			c.Inc()
+
 			ch <- struct{}{}
 		}()
 	}
