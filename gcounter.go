@@ -3,13 +3,13 @@ package gounter
 type CounterType byte
 
 const (
-	// Normal Counter
+	// CounterNormal Normal Counter
 	CounterNormal CounterType = iota
-	// Max Counter
+	// CounterWithMax Max Counter
 	CounterWithMax
-	// Label Counter
+	// CounterWithLabel Label Counter
 	CounterWithLabel
-	// Label Max Counter
+	// CounterWithLabelAndMax Label Max Counter
 	CounterWithLabelAndMax
 )
 
@@ -31,7 +31,8 @@ type Gounter interface {
 	CopyTo(Gounter) (bool, error)
 }
 
-type GounterWithLable interface {
+// WithLabel gounter with label
+type WithLabel interface {
 	Label() CounterType
 
 	Get(string) (float64, Gounter)
