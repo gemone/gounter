@@ -86,7 +86,7 @@ func testCopyTo(t *testing.T) {
 			t.Fatalf("same counter should err, but %s", err.Error())
 		}
 
-		// copyto
+		// copy to
 		ok, err = c1.CopyTo(c2)
 		if !ok {
 			t.Fatal("counter should be copied, but not")

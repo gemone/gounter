@@ -34,12 +34,12 @@ var counterPool = &sync.Pool{
 	},
 }
 
-// AcquireCounter return a Counter Poionter.
+// AcquireCounter return a Counter Pointer.
 func AcquireCounter() *Counter {
 	return counterPool.New().(*Counter)
 }
 
-// ReleaseCounter releases a Counter Poionter.
+// ReleaseCounter releases a Counter Pointer.
 func ReleaseCounter(c *Counter) {
 	c.reset()
 	counterPool.Put(c)
