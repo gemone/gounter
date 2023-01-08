@@ -38,8 +38,7 @@ func TestMaxCounterGetReal(t *testing.T) {
 }
 
 func TestMaxCounterChange(t *testing.T) {
-	// FIXME Enable Parallel can not pass test
-	//t.Parallel()
+	t.Parallel()
 
 	testMaxCounterCount(t)
 	//
@@ -101,16 +100,16 @@ func testMaxCounterCount(t *testing.T) {
 	}
 
 	if num != uint32(goCounter) {
-		t.Logf("counter num should %d, but %d", goCounter, num)
+		t.Fatalf("counter num should %d, but %d", goCounter, num)
 	}
 
-	if num2 != 50 {
-		t.Logf("counter num should 50, but %d", num2)
+	if num2 != uint32(goCounter) {
+		t.Fatalf("counter num should 50, but %d", num2)
 	}
 
 	realNum := c.Real()
 
-	if realNum != 50 {
-		t.Logf("realNum should 50, but %0f", realNum)
+	if realNum != float64(goCounter) {
+		t.Fatalf("realNum should 50, but %0.f", realNum)
 	}
 }

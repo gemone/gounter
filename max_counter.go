@@ -52,8 +52,8 @@ func (c *MaxCounter) reset() {
 	ReleaseCounter(counter)
 
 	c.counter = nil
-
 	atomic.StoreUint64(&c.maxBits, 0)
+	atomic.StoreUint32(&c.done, 0)
 }
 
 // isDone say now is max?
