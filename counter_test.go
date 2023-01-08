@@ -30,6 +30,7 @@ func TestCounterCopyTo(t *testing.T) {
 	testGo(t, testCopyTo, 10000)
 }
 
+// race fail
 func TestCounterChange(t *testing.T) {
 	t.Parallel()
 
@@ -69,12 +70,30 @@ func testCopyTo(t *testing.T) {
 		atomic.AddUint64(&c1.bits, v1Change)
 
 		// c1 to c1
-		c1.CopyTo(c1)
+		ok, err := c1.CopyTo(c1)
+		if ok {
+			t.Fatal("same counter should err, but not!")
+		}
+		if err != ErrSameCounter {
+			t.Fatalf("same counter should err, but %s", err.Error())
+		}
 		// c2 to c2
-		c2.CopyTo(c2)
+		ok, err = c2.CopyTo(c2)
+		if ok {
+			t.Fatal("same counter should err, but not!")
+		}
+		if err != ErrSameCounter {
+			t.Fatalf("same counter should err, but %s", err.Error())
+		}
 
-		// copyto
-		c1.CopyTo(c2)
+		// copy to
+		ok, err = c1.CopyTo(c2)
+		if !ok {
+			t.Fatal("counter should be copied, but not")
+		}
+		if err != nil {
+			t.Fatalf("counter should be copied, but err: %s", err.Error())
+		}
 
 		if c2.bits != v1Change {
 			t.Fatalf("copy error: val=%d", c2.bits)
@@ -94,6 +113,7 @@ func testCounterInc(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		go func() {
 			c.Inc()
+
 			ch <- struct{}{}
 		}()
 	}
@@ -169,7 +189,8 @@ func testCounterDecZero(t *testing.T) {
 	for i := 0; i < 200; i++ {
 		select {
 		case <-ch:
-		case <-time.After(time.Second):
+		case <-time.After(time.Second * 10):
+			// test -race
 			t.Fatal("timeout")
 		}
 	}
@@ -179,7 +200,11 @@ func testCounterDecZero(t *testing.T) {
 	n := math.Float64frombits(bits)
 
 	if int64(n) != num {
-		t.Fatalf("dec error: num should %d, buf %0f", num, n)
+		t.Fatalf("dec error: num should %d, but %0f", num, n)
+	}
+
+	if int64(c.Real()) != num {
+		t.Fatalf("dec error: num should %d, but %0f", num, c.Real())
 	}
 
 	if c.Get() != 0 {
