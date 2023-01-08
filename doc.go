@@ -1,3 +1,2 @@
-// doc
-//
+// Package gounter doc
 package gounter
