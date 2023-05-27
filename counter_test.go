@@ -43,6 +43,26 @@ func TestCounterChange(t *testing.T) {
 	testGo(t, testCounterDecZero, 10)
 }
 
+func TestReset(t *testing.T) {
+	t.Parallel()
+
+	c := AcquireCounter()
+	for i := 0; i < 1000; i += 1 {
+		c.Inc()
+	}
+
+	v := c.Get()
+	if v != 1000 {
+		t.Fatalf("should be %d, but %f", 1000, v)
+	}
+
+	c.Reset()
+	v = c.Get()
+	if v != 0 {
+		t.Fatalf("should be %d, but %f", 0, v)
+	}
+}
+
 func testNewCounter(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		c := AcquireCounter()
@@ -99,8 +119,15 @@ func testCopyTo(t *testing.T) {
 			t.Fatalf("copy error: val=%d", c2.bits)
 		}
 
+		//	copy to other
+		ok, err = c1.CopyTo(1)
+		if ok || err == nil {
+			t.Fatal("should err, but not")
+		}
+
 		ReleaseCounter(c2)
 		ReleaseCounter(c1)
+
 	}
 }
 
