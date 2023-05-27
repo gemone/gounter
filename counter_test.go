@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+func TestCounterReleaseNil(t *testing.T) {
+	ReleaseCounter(nil)
+}
+
 func TestNewCounter(t *testing.T) {
 	t.Parallel()
 
@@ -127,7 +131,6 @@ func testCopyTo(t *testing.T) {
 
 		ReleaseCounter(c2)
 		ReleaseCounter(c1)
-
 	}
 }
 

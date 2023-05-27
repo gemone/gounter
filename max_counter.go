@@ -35,8 +35,11 @@ func AcquireMaxCounter(max float64) *MaxCounter {
 
 // ReleaseMaxCounter releases MaxCounter.
 func ReleaseMaxCounter(c *MaxCounter) {
-	c.reset()
+	if c == nil {
+		return
+	}
 
+	c.reset()
 	ReleaseCounter(c.counter)
 	c.counter = nil
 	maxCounterPool.Put(c)
@@ -45,7 +48,11 @@ func ReleaseMaxCounter(c *MaxCounter) {
 // reset MaxCounter
 // And releases Counter
 func (c *MaxCounter) reset() {
-	c.counter.Reset()
+	if c.counter != nil {
+		c.counter.Reset()
+	} else {
+		c.counter = AcquireCounter()
+	}
 	atomic.StoreUint64(&c.maxBits, 0)
 	atomic.StoreUint32(&c.done, 0)
 }
@@ -158,7 +165,7 @@ func (c *MaxCounter) Dec() bool {
 	return c.Add(-1)
 }
 
-// CopyTo copies number to dst
+// CopyTo copies number to dst.
 func (c *MaxCounter) CopyTo(d interface{}) (ok bool, err error) {
 	dst, can := d.(*MaxCounter)
 	if !can {
@@ -167,6 +174,7 @@ func (c *MaxCounter) CopyTo(d interface{}) (ok bool, err error) {
 	}
 
 	if c == dst {
+		err = ErrSameCounterPointer
 		return
 	}
 
@@ -176,6 +184,10 @@ func (c *MaxCounter) CopyTo(d interface{}) (ok bool, err error) {
 
 		oldCounter := dst.counter
 		counter := c.counter
+
+		if counter == nil {
+			counter = AcquireCounter()
+		}
 
 		if oldCounter == nil {
 			oldCounter = AcquireCounter()

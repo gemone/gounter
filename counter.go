@@ -35,6 +35,9 @@ func AcquireCounter() *Counter {
 
 // ReleaseCounter releases a Counter Pointer.
 func ReleaseCounter(c *Counter) {
+	if c == nil {
+		return
+	}
 	c.reset()
 	counterPool.Put(c)
 }

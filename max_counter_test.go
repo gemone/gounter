@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+func TestMaxCounterReleaseNil(t *testing.T) {
+	ReleaseMaxCounter(nil)
+}
+
 func TestMaxCounterSetMax(t *testing.T) {
 	t.Parallel()
 
@@ -95,6 +99,17 @@ func TestMaxCounterAddAndSub(t *testing.T) {
 	if v != 0 {
 		t.Fatalf("should %d, but %f", 0, v)
 	}
+}
+
+func TestMaxCounter_CopyTo(t *testing.T) {
+	t.Parallel()
+
+	testMaxCounterCopyTo(t)
+
+	testGo(t, testMaxCounterCopyTo, 10)
+	testGo(t, testMaxCounterCopyTo, 100)
+	testGo(t, testMaxCounterCopyTo, 1000)
+	testGo(t, testMaxCounterCopyTo, 10000)
 }
 
 func TestMaxCounter_Reset(t *testing.T) {
@@ -217,5 +232,67 @@ func testMaxCounterCount(t *testing.T) {
 	v := c.Get()
 	if v != 0 {
 		t.Fatalf("should be %d, but %f", 0, v)
+	}
+}
+
+func testMaxCounterCopyTo(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		c1 := AcquireMaxCounter(50)
+		c2 := AcquireMaxCounter(50)
+
+		// c1 to c1
+		ok, err := c1.CopyTo(c1)
+		if ok {
+			t.Fatal("same counter should err, but not!")
+		}
+		if err != ErrSameCounterPointer {
+			t.Fatalf("same counter should err, but %s", err)
+		}
+		// c2 to c2
+		ok, err = c2.CopyTo(c2)
+		if ok {
+			t.Fatal("same counter should err, but not!")
+		}
+		if err != ErrSameCounterPointer {
+			t.Fatalf("same counter should err, but %s", err.Error())
+		}
+
+		// copy to
+		ok, err = c1.CopyTo(c2)
+		if !ok {
+			t.Fatalf("counter should be copied, but not, %v", err)
+		}
+
+		//	copy to other
+		ok, err = c1.CopyTo(1)
+		if ok || err == nil {
+			t.Fatal("should err, but not")
+		}
+
+		// counter nil
+		c1.counter = nil
+		ok, err = c1.CopyTo(c2)
+		if !ok {
+			t.Fatalf("should ok, but not, %v", err)
+		}
+
+		c2.counter = nil
+		ok, err = c1.CopyTo(c2)
+		if !ok {
+			t.Fatal("should ok, but not")
+		}
+
+		// copy same, should err
+		c1Counter := c1.counter
+		c1.counter = c2.counter
+		ok, _ = c1.CopyTo(c2)
+		if ok {
+			t.Fatal("should err, but not")
+		}
+		// fix error
+		c1.counter = c1Counter
+
+		ReleaseMaxCounter(c2)
+		ReleaseMaxCounter(c1)
 	}
 }
