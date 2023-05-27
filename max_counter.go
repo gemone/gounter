@@ -131,8 +131,12 @@ func (c *MaxCounter) Add(delta float64) bool {
 	max := c.GetMax()
 	realNum := c.Real()
 
-	if realNum >= max && delta >= 0 {
+	if realNum >= max && delta > 0 {
 		c.setDone()
+		return false
+	}
+
+	if realNum <= 0 && delta < 0 {
 		return false
 	}
 

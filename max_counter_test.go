@@ -60,6 +60,43 @@ func TestMaxCounterSetAndGet(t *testing.T) {
 	testGo(t, testMaxCounterSetAndGet, 10000)
 }
 
+func TestMaxCounterAddAndSub(t *testing.T) {
+	t.Parallel()
+
+	c := AcquireMaxCounter(50)
+	defer ReleaseMaxCounter(c)
+
+	for i := 0; i < 100; i += 1 {
+		ok := c.Add(1)
+		if i >= 50 && ok {
+			t.Error("should false, but true")
+
+			// check done
+			can := c.Can()
+			if can {
+				t.Fatal("can not add")
+			}
+		}
+	}
+
+	v := c.Get()
+	if v != 50 {
+		t.Fatalf("should %d, but %f", 50, v)
+	}
+
+	for i := 0; i < 100; i += 1 {
+		ok := c.Sub(1)
+		if i >= 50 && ok {
+			t.Error("should false, but true.")
+		}
+	}
+
+	v = c.Get()
+	if v != 0 {
+		t.Fatalf("should %d, but %f", 0, v)
+	}
+}
+
 func TestMaxCounter_Reset(t *testing.T) {
 	t.Parallel()
 
