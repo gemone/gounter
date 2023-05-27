@@ -48,6 +48,34 @@ func TestMaxCounterChange(t *testing.T) {
 	testGo(t, testMaxCounterCount, 10000)
 }
 
+func TestMaxCounterSetAndGet(t *testing.T) {
+	t.Parallel()
+
+	testMaxCounterSetAndGet(t)
+
+	testGo(t, testMaxCounterSetAndGet, 10)
+	testGo(t, testMaxCounterSetAndGet, 100)
+	testGo(t, testMaxCounterSetAndGet, 1000)
+	testGo(t, testMaxCounterSetAndGet, 10000)
+}
+
+// testMaxCounterSetAndGet
+func testMaxCounterSetAndGet(t *testing.T) {
+	c := AcquireMaxCounter(100)
+	defer ReleaseMaxCounter(c)
+
+	c.Set(100)
+	v := c.Get()
+	if v != 100 {
+		t.Fatalf("should be %d, but %f", 100, v)
+	}
+
+	ok := c.Set(101)
+	if ok {
+		t.Fatal("should be true, but false")
+	}
+}
+
 // testMaxCounterSetMax set max counter
 func testMaxCounterSetMax(t *testing.T) {
 	c := AcquireMaxCounter(0)

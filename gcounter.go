@@ -1,21 +1,14 @@
 package gounter
 
-type CounterType byte
+import "errors"
 
-const (
-	// CounterNormal Normal Counter
-	CounterNormal CounterType = iota // CounterWithMax Max Counter
-	CounterWithMax
-	// CounterWithLabel Label Counter
-	CounterWithLabel
-	// CounterWithLabelAndMax Label Max Counter
-	CounterWithLabelAndMax
+var (
+	ErrSameCounterPointer   = errors.New("can not copy same counter")
+	ErrDifferentCounterType = errors.New("can not copy different type counter")
 )
 
 type Gounter interface {
 	Get() float64
-	Label() CounterType
-
 	Reset()
 
 	Set(float64) bool
@@ -24,7 +17,7 @@ type Gounter interface {
 	Inc() bool
 	Dec() bool
 
-	CopyTo(Gounter) (bool, error)
+	CopyTo(interface{}) (bool, error)
 }
 
 // LabelGounter gounter with label

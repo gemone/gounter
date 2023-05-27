@@ -74,7 +74,7 @@ func testCopyTo(t *testing.T) {
 		if ok {
 			t.Fatal("same counter should err, but not!")
 		}
-		if err != ErrSameCounter {
+		if err != ErrSameCounterPointer {
 			t.Fatalf("same counter should err, but %s", err.Error())
 		}
 		// c2 to c2
@@ -82,7 +82,7 @@ func testCopyTo(t *testing.T) {
 		if ok {
 			t.Fatal("same counter should err, but not!")
 		}
-		if err != ErrSameCounter {
+		if err != ErrSameCounterPointer {
 			t.Fatalf("same counter should err, but %s", err.Error())
 		}
 

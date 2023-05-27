@@ -95,13 +95,13 @@ func (c *MaxCounter) SetMax(max float64) {
 
 // Set sets the value of the counter to the given value,
 // if it is less than or equal to the maximum value
-func (c *MaxCounter) Set(value float64) {
+func (c *MaxCounter) Set(value float64) bool {
 	max := c.GetMax()
 	if max < value {
-		return
+		return false
 	}
 
-	c.counter.Set(value)
+	return c.counter.Set(value)
 }
 
 // Get a number.
@@ -123,20 +123,15 @@ func (c *MaxCounter) Real() float64 {
 	return c.counter.Real()
 }
 
-// Label returns CounterWithMax.
-func (c *MaxCounter) Label() CounterType {
-	return CounterWithMax
-}
-
 // Reset reset MaxCounter.
 func (c *MaxCounter) Reset() {
 	c.reset()
 }
 
 // Add is same as Counter.Add().
-func (c *MaxCounter) Add(delta float64) {
+func (c *MaxCounter) Add(delta float64) bool {
 	if c.isDone() {
-		return
+		return false
 	}
 
 	max := c.GetMax()
@@ -144,34 +139,36 @@ func (c *MaxCounter) Add(delta float64) {
 
 	if realNum >= max {
 		c.setDone()
-		return
+		return false
 	}
 
-	c.counter.Add(delta)
+	return c.counter.Add(delta)
 }
 
 // Sub is same as Counter.Sub().
-func (c *MaxCounter) Sub(delta float64) {
-	c.Add(delta * -1)
+func (c *MaxCounter) Sub(delta float64) bool {
+	return c.Add(delta * -1)
 }
 
 // Inc is same as Counter.Inc().
-func (c *MaxCounter) Inc() {
-	c.Add(1)
+func (c *MaxCounter) Inc() bool {
+	return c.Add(1)
 }
 
 // Dec is same as Counter.Dec().
-func (c *MaxCounter) Dec() {
-	c.Add(-1)
+func (c *MaxCounter) Dec() bool {
+	return c.Add(-1)
 }
 
 // CopyTo copies number to dst
-func (c *MaxCounter) CopyTo(dst *MaxCounter) (ok bool, err error) {
-	if c == dst {
+func (c *MaxCounter) CopyTo(d interface{}) (ok bool, err error) {
+	dst, can := d.(*MaxCounter)
+	if !can {
+		err = ErrDifferentCounterType
 		return
 	}
 
-	if c.Label() != dst.Label() {
+	if c == dst {
 		return
 	}
 
