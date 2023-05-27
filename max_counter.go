@@ -6,8 +6,6 @@ import (
 	"sync/atomic"
 )
 
-var releaseLocker = &sync.Mutex{}
-
 // MaxCounter has a max number for counter.
 // When counter to max number, it will stop and reject all other actions.
 type MaxCounter struct {
@@ -37,21 +35,17 @@ func AcquireMaxCounter(max float64) *MaxCounter {
 
 // ReleaseMaxCounter releases MaxCounter.
 func ReleaseMaxCounter(c *MaxCounter) {
-	// fix release wrong
-	releaseLocker.Lock()
-	defer releaseLocker.Unlock()
-
 	c.reset()
+
+	ReleaseCounter(c.counter)
+	c.counter = nil
 	maxCounterPool.Put(c)
 }
 
 // reset MaxCounter
 // And releases Counter
 func (c *MaxCounter) reset() {
-	counter := c.counter
-	ReleaseCounter(counter)
-
-	c.counter = nil
+	c.counter.Reset()
 	atomic.StoreUint64(&c.maxBits, 0)
 	atomic.StoreUint32(&c.done, 0)
 }
@@ -66,6 +60,11 @@ func (c *MaxCounter) isDone() bool {
 // setDone set add done, now is max.
 func (c *MaxCounter) setDone() {
 	atomic.StoreUint32(&c.done, 1)
+}
+
+// setUnDone set done value = 0.
+func (c *MaxCounter) setUnDone() {
+	atomic.StoreUint32(&c.done, 0)
 }
 
 // Can use add?
@@ -105,17 +104,8 @@ func (c *MaxCounter) Set(value float64) bool {
 }
 
 // Get a number.
-// if counter number > max, return max;
-// else return true number.
 func (c *MaxCounter) Get() float64 {
-	val := c.counter.Get()
-	max := c.GetMax()
-
-	if val > max {
-		return max
-	}
-
-	return val
+	return c.counter.Get()
 }
 
 // Real get Counter Real().
@@ -130,14 +120,18 @@ func (c *MaxCounter) Reset() {
 
 // Add is same as Counter.Add().
 func (c *MaxCounter) Add(delta float64) bool {
-	if c.isDone() {
+	if c.isDone() && delta >= 0 {
 		return false
+	}
+
+	if c.isDone() && delta < 0 {
+		c.setUnDone()
 	}
 
 	max := c.GetMax()
 	realNum := c.Real()
 
-	if realNum >= max {
+	if realNum >= max && delta >= 0 {
 		c.setDone()
 		return false
 	}

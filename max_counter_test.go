@@ -2,6 +2,7 @@ package gounter
 
 import (
 	"math/rand"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -41,7 +42,7 @@ func TestMaxCounterChange(t *testing.T) {
 	t.Parallel()
 
 	testMaxCounterCount(t)
-	//
+
 	testGo(t, testMaxCounterCount, 10)
 	testGo(t, testMaxCounterCount, 100)
 	testGo(t, testMaxCounterCount, 1000)
@@ -57,6 +58,28 @@ func TestMaxCounterSetAndGet(t *testing.T) {
 	testGo(t, testMaxCounterSetAndGet, 100)
 	testGo(t, testMaxCounterSetAndGet, 1000)
 	testGo(t, testMaxCounterSetAndGet, 10000)
+}
+
+func TestMaxCounter_Reset(t *testing.T) {
+	t.Parallel()
+
+	c := AcquireMaxCounter(50)
+	defer ReleaseMaxCounter(c)
+	for i := 0; i < 50; i++ {
+		c.Inc()
+	}
+
+	v := c.Get()
+	if v != 50 {
+		t.Fatalf("should be %d, but %f", 50, v)
+	}
+
+	c.Reset()
+
+	v = c.Get()
+	if v != 0 {
+		t.Fatalf("should be %d, but %f", 0, v)
+	}
 }
 
 // testMaxCounterSetAndGet
@@ -107,6 +130,7 @@ func testMaxCounterCount(t *testing.T) {
 	var num uint32
 	var num2 uint32
 
+	// Add
 	for i := 0; i < goCounter; i++ {
 		go func() {
 			c.Inc()
@@ -139,5 +163,22 @@ func testMaxCounterCount(t *testing.T) {
 
 	if realNum != float64(goCounter) {
 		t.Fatalf("realNum should 50, but %0.f", realNum)
+	}
+
+	// Sub
+	wg := sync.WaitGroup{}
+	for i := 0; i < goCounter; i++ {
+		wg.Add(1)
+		go func() {
+			c.Dec()
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+
+	v := c.Get()
+	if v != 0 {
+		t.Fatalf("should be %d, but %f", 0, v)
 	}
 }
