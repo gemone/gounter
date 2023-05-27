@@ -36,7 +36,7 @@ var counterPool = &sync.Pool{
 
 // AcquireCounter return a Counter Pointer.
 func AcquireCounter() *Counter {
-	return counterPool.New().(*Counter)
+	return counterPool.Get().(*Counter)
 }
 
 // ReleaseCounter releases a Counter Pointer.
