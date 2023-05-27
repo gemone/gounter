@@ -93,6 +93,17 @@ func (c *MaxCounter) SetMax(max float64) {
 	}
 }
 
+// Set sets the value of the counter to the given value,
+// if it is less than or equal to the maximum value
+func (c *MaxCounter) Set(value float64) {
+	max := c.GetMax()
+	if max < value {
+		return
+	}
+
+	c.counter.Set(value)
+}
+
 // Get a number.
 // if counter number > max, return max;
 // else return true number.

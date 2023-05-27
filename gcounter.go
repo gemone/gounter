@@ -18,6 +18,7 @@ type Gounter interface {
 
 	Reset()
 
+	Set(float64) bool
 	Add(float64) bool
 	Sub(float64) bool
 	Inc() bool
@@ -28,13 +29,12 @@ type Gounter interface {
 
 // LabelGounter gounter with label
 type LabelGounter interface {
-	Label() CounterType
-
 	Get(string) (float64, Gounter)
 
 	Reset()
 	ResetLabel(string)
 
+	Set(string, float64) (bool, Gounter)
 	Add(string, float64) (bool, Gounter)
 	Sub(string, float64) (bool, Gounter)
 	Inc(string) (bool, Gounter)

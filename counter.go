@@ -81,6 +81,17 @@ func (c *Counter) Dec() bool {
 	return c.Add(-1)
 }
 
+// Set sets the value of the counter to the given value using atomic operations.
+func (c *Counter) Set(value float64) bool {
+	for {
+		oldBits := atomic.LoadUint64(&c.bits)
+		newBits := math.Float64bits(value)
+		if atomic.CompareAndSwapUint64(&c.bits, oldBits, newBits) {
+			return true
+		}
+	}
+}
+
 // Add increases the counter number.
 // Decreasing use negative number.
 // Counter always returns true.
