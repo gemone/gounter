@@ -1,4 +1,4 @@
-name: CI
+name: Test
 
 on:
   push:
@@ -13,22 +13,15 @@ jobs:
     strategy:
       matrix:
         os: [macOS-latest, windows-latest, ubuntu-latest]
-        version: ['1.18', '1.19']
+        version: ['1.18', '1.19', '1.20']
 
     steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v3
     - name: Set up Go ${{ matrix.version }}
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.version }}
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
-
-    - name: Download dependencies
-      run: |
-        go mod download
-
     - name: Test
       run: go test -cover ./... -v
 
