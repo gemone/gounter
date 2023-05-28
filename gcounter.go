@@ -21,18 +21,18 @@ type Gounter interface {
 }
 
 // LabelGounter gounter with label
-type LabelGounter interface {
-	Get(string) (float64, Gounter)
+type LabelGounter[T Gounter] interface {
+	Get(string) (float64, T)
 
 	Reset()
 	ResetLabel(string)
+	RemoveLabel(string)
 
-	Set(string, float64) (bool, Gounter)
-	Add(string, float64) (bool, Gounter)
-	Sub(string, float64) (bool, Gounter)
-	Inc(string) (bool, Gounter)
-	Dec(string) (bool, Gounter)
-
+	Set(string, float64) (bool, T)
+	Add(string, float64) (bool, T)
+	Sub(string, float64) (bool, T)
+	Inc(string) (bool, T)
+	Dec(string) (bool, T)
 	// Based on the map feature,
 	// replication should not be accepted. (CopyTo)
 }
