@@ -1,15 +1,9 @@
 package gounter
 
 import (
-	"errors"
 	"math"
 	"sync"
 	"sync/atomic"
-)
-
-var (
-	ErrSameCounter    = errors.New("can not copy same counter")
-	ErrDifferentLabel = errors.New("can not copy different label counter")
 )
 
 // Counter supports increasing and decreasing counter internal value.
@@ -41,6 +35,9 @@ func AcquireCounter() *Counter {
 
 // ReleaseCounter releases a Counter Pointer.
 func ReleaseCounter(c *Counter) {
+	if c == nil {
+		return
+	}
 	c.reset()
 	counterPool.Put(c)
 }
@@ -81,6 +78,17 @@ func (c *Counter) Dec() bool {
 	return c.Add(-1)
 }
 
+// Set sets the value of the counter to the given value using atomic operations.
+func (c *Counter) Set(value float64) bool {
+	for {
+		oldBits := atomic.LoadUint64(&c.bits)
+		newBits := math.Float64bits(value)
+		if atomic.CompareAndSwapUint64(&c.bits, oldBits, newBits) {
+			return true
+		}
+	}
+}
+
 // Add increases the counter number.
 // Decreasing use negative number.
 // Counter always returns true.
@@ -101,12 +109,6 @@ func (c *Counter) Sub(delta float64) bool {
 	return c.Add(delta * -1)
 }
 
-// Label returns a number for CounterType
-// Counter always returns CounterNormal
-func (c *Counter) Label() CounterType {
-	return CounterNormal
-}
-
 // Reset resets this Counter.
 func (c *Counter) Reset() {
 	c.reset()
@@ -114,16 +116,16 @@ func (c *Counter) Reset() {
 
 // CopyTo copies a Counter to other Counter.
 // If same Counter, do not change everything.
-func (c *Counter) CopyTo(dst *Counter) (ok bool, err error) {
-	// fix c to c can not return
-	if c == dst {
-		err = ErrSameCounter
+func (c *Counter) CopyTo(d interface{}) (ok bool, err error) {
+	dst, can := d.(*Counter)
+	if !can {
+		err = ErrDifferentCounterType
 		return
 	}
 
-	// some error ?
-	if c.Label() != dst.Label() {
-		err = ErrDifferentLabel
+	// fix c to c can not return
+	if c == dst {
+		err = ErrSameCounterPointer
 		return
 	}
 

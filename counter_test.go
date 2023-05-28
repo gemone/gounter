@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+func TestCounterReleaseNil(t *testing.T) {
+	ReleaseCounter(nil)
+}
+
 func TestNewCounter(t *testing.T) {
 	t.Parallel()
 
@@ -43,6 +47,26 @@ func TestCounterChange(t *testing.T) {
 	testGo(t, testCounterDecZero, 10)
 }
 
+func TestReset(t *testing.T) {
+	t.Parallel()
+
+	c := AcquireCounter()
+	for i := 0; i < 1000; i += 1 {
+		c.Inc()
+	}
+
+	v := c.Get()
+	if v != 1000 {
+		t.Fatalf("should be %d, but %f", 1000, v)
+	}
+
+	c.Reset()
+	v = c.Get()
+	if v != 0 {
+		t.Fatalf("should be %d, but %f", 0, v)
+	}
+}
+
 func testNewCounter(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		c := AcquireCounter()
@@ -74,7 +98,7 @@ func testCopyTo(t *testing.T) {
 		if ok {
 			t.Fatal("same counter should err, but not!")
 		}
-		if err != ErrSameCounter {
+		if err != ErrSameCounterPointer {
 			t.Fatalf("same counter should err, but %s", err.Error())
 		}
 		// c2 to c2
@@ -82,7 +106,7 @@ func testCopyTo(t *testing.T) {
 		if ok {
 			t.Fatal("same counter should err, but not!")
 		}
-		if err != ErrSameCounter {
+		if err != ErrSameCounterPointer {
 			t.Fatalf("same counter should err, but %s", err.Error())
 		}
 
@@ -97,6 +121,12 @@ func testCopyTo(t *testing.T) {
 
 		if c2.bits != v1Change {
 			t.Fatalf("copy error: val=%d", c2.bits)
+		}
+
+		//	copy to other
+		ok, err = c1.CopyTo(1)
+		if ok || err == nil {
+			t.Fatal("should err, but not")
 		}
 
 		ReleaseCounter(c2)
