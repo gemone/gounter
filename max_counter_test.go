@@ -5,7 +5,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-	"time"
 )
 
 func TestMaxCounterReleaseNil(t *testing.T) {
@@ -174,7 +173,6 @@ func testMaxCounterSetMax(t *testing.T) {
 
 func testMaxCounterCount(t *testing.T) {
 	goCounter := 50
-	ch := make(chan struct{}, goCounter)
 
 	c := AcquireMaxCounter(float64(goCounter))
 	defer ReleaseMaxCounter(c)
@@ -182,6 +180,9 @@ func testMaxCounterCount(t *testing.T) {
 	var num uint32
 	var num2 uint32
 
+	wg := sync.WaitGroup{}
+
+	wg.Add(goCounter)
 	// Add
 	for i := 0; i < goCounter; i++ {
 		go func() {
@@ -191,17 +192,11 @@ func testMaxCounterCount(t *testing.T) {
 			if c.Can() {
 				atomic.AddUint32(&num2, 1)
 			}
-			ch <- struct{}{}
+			wg.Done()
 		}()
 	}
 
-	for i := 0; i < goCounter; i++ {
-		select {
-		case <-ch:
-		case <-time.After(time.Second):
-			t.Fatal("timeout")
-		}
-	}
+	wg.Wait()
 
 	if num != uint32(goCounter) {
 		t.Fatalf("counter num should %d, but %d", goCounter, num)
@@ -218,7 +213,6 @@ func testMaxCounterCount(t *testing.T) {
 	}
 
 	// Sub
-	wg := sync.WaitGroup{}
 	for i := 0; i < goCounter; i++ {
 		wg.Add(1)
 		go func() {
