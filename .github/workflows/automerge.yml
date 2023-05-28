@@ -27,4 +27,5 @@ jobs:
         uses: "pascalgn/automerge-action@v0.15.6"
         env:
           GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
+          MERGE_METHOD: "rebase"
           MERGE_FILTER_AUTHOR: "gemone"
